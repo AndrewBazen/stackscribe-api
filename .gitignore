@@ -1,0 +1,11 @@
+/target
+/.idea
+/.vscode
+*.iml
+*.hprof
+*.log
+*.pyc
+__pycache__/
+*.class
+*.jar
+*.env
