@@ -1,14 +1,15 @@
 -- PostgreSQL schema for StackScribe server
 -- Multi-tenant architecture with user-based data separation
 
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- Users table - each user has their own data
 CREATE TABLE IF NOT EXISTS users (
-    id VARCHAR(255) PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     username VARCHAR(255) UNIQUE NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     last_login TIMESTAMP,
     is_active BOOLEAN DEFAULT true
 );
@@ -16,7 +17,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- Archives belong to specific users
 CREATE TABLE IF NOT EXISTS archives (
     id VARCHAR(255) PRIMARY KEY,
-    user_id VARCHAR(255) NOT NULL,
+    user_id UUID NOT NULL,
     name VARCHAR(255) NOT NULL,
     description TEXT,
     created_at TIMESTAMP NOT NULL,
@@ -28,7 +29,7 @@ CREATE TABLE IF NOT EXISTS archives (
 CREATE TABLE IF NOT EXISTS tomes (
     id VARCHAR(255) PRIMARY KEY,
     archive_id VARCHAR(255) NOT NULL,
-    user_id VARCHAR(255) NOT NULL, -- Denormalized for faster queries
+    user_id UUID NOT NULL, -- Denormalized for faster queries
     name VARCHAR(255) NOT NULL,
     description TEXT,
     created_at TIMESTAMP NOT NULL,
@@ -41,8 +42,8 @@ CREATE TABLE IF NOT EXISTS tomes (
 CREATE TABLE IF NOT EXISTS entries (
     id VARCHAR(255) PRIMARY KEY,
     tome_id VARCHAR(255) NOT NULL,
-    user_id VARCHAR(255) NOT NULL, -- Denormalized for faster queries
-    title VARCHAR(255) NOT NULL,
+    user_id UUID NOT NULL, -- Denormalized for faster queries
+    name VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL,
@@ -67,7 +68,7 @@ CREATE INDEX IF NOT EXISTS idx_entries_user_updated ON entries(user_id, updated_
 
 -- Per-user sync metadata table for server-side tracking
 CREATE TABLE IF NOT EXISTS user_sync_metadata (
-    user_id VARCHAR(255) NOT NULL,
+    user_id UUID NOT NULL,
     key VARCHAR(255) NOT NULL,
     value TEXT NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
